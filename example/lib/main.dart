@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:virtual_keyboard_custom_layout/virtual_keyboard_custom_layout.dart';
-import 'package:virtual_keyboard_custom_layout_example/keyboard_aux.dart';
-import 'package:virtual_keyboard_custom_layout_example/types_keyboard.dart';
 
 void main() => runApp(const MyApp());
 
@@ -30,22 +29,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // Holds the text that user typed.
-  String text = '';
-
-  // True if shift enabled.
-  bool shiftEnabled = false;
-
-  // is true will show the numeric keyboard.
-  bool isNumericMode = false;
-
-  // necessary to maintain the focus and to insert letters in the
-  // middle of the string.
-  TextEditingController controllerField01 = TextEditingController();
-  TextEditingController controllerField02 = TextEditingController();
   TextEditingController controllerField03 = TextEditingController();
 
-  // key variables to utilize the keyboard with the class KeyboardAux
   var isKeyboardVisible = false;
   var controllerKeyboard = TextEditingController();
   late TypeLayout typeLayout;
@@ -72,30 +57,9 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Center(
           child: Column(
             children: <Widget>[
-              TextFormField(
-                // To prevent overflow with android and ios native keyboard
-                keyboardType: TextInputType.none,
-                controller: controllerField01,
-                onTap: () {
-                  setState(() {
-                    isKeyboardVisible = true;
-                    controllerKeyboard = controllerField01;
-                    typeLayout = TypeLayout.alphabet;
-                  });
-                },
-              ),
-              TextFormField(
-                keyboardType: TextInputType.none,
-                controller: controllerField02,
-                onTap: () {
-                  setState(() {
-                    isKeyboardVisible = true;
-                    controllerKeyboard = controllerField02;
-                    typeLayout = TypeLayout.alphaEmail;
-                  });
-                },
-              ),
-              TextFormField(
+              TextField(),
+              TextField(
+                inputFormatters: [],
                 keyboardType: TextInputType.none,
                 controller: controllerField03,
                 onTap: () {
@@ -104,20 +68,98 @@ class _MyHomePageState extends State<MyHomePage> {
                     controllerKeyboard = controllerField03;
                     typeLayout = TypeLayout.numeric;
                   });
+
+                  showDialog(
+                    barrierDismissible: true,
+                    context: context,
+                    barrierColor: Colors.transparent,
+                    builder: (context) {
+                      return Dialog(
+                        alignment: Alignment.bottomCenter,
+                        insetPadding: EdgeInsets.only(right: 8),
+                        backgroundColor: Colors.transparent,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 700,
+                            color: Colors.white.withAlpha(50),
+                            child: Row(children: [
+                              SizedBox(
+                                width: 8,
+                              ),
+                              Expanded(
+                                flex: 5,
+                                child: Container(
+                                  color: Colors.purpleAccent,
+                                  height: double.infinity,
+                                  width:
+                                      MediaQuery.of(context).size.width * .70,
+                                  child: Center(child: Text("Content")),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 8,
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            color: Colors.white.withAlpha(50),
+                                            border: Border.all(
+                                                color: Colors.pinkAccent)),
+                                        child: Column(
+                                          children: [
+                                            TextField(
+                                              decoration: const InputDecoration(
+                                                contentPadding:
+                                                    EdgeInsets.only(left: 8),
+                                              ),
+                                              controller: controllerKeyboard,
+                                            ),
+                                            VirtualKeyboard(
+                                              height: 650,
+                                              width: double.infinity,
+                                              iconColor: Colors.black,
+                                              textStyle: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 50),
+                                              textController:
+                                                  controllerKeyboard,
+                                              defaultLayouts: const [
+                                                VirtualKeyboardDefaultLayouts
+                                                    .English,
+                                              ],
+                                              alwaysCaps: true,
+                                              borderColor:
+                                                  Colors.pink.withAlpha(100),
+                                              type: VirtualKeyboardType.Custom,
+                                              keys: typeLayout.keyboard,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ]),
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
               ),
-              Expanded(
-                child: Container(),
-              ),
-              if (isKeyboardVisible)
-                Stack(children: [
-                  KeyboardAux(
-                    alwaysCaps: true,
-                    controller: controllerKeyboard,
-                    typeLayout: typeLayout,
-                    typeKeyboard: VirtualKeyboardType.Custom,
-                  ),
-                ]),
             ],
           ),
         ),
@@ -126,27 +168,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   keyboardListeners() {
-    // Making the return function properly.
-    controllerField01.addListener(() {
-      if (controllerField01.value.text.endsWith("\n")) {
-        controllerField01.text =
-            controllerField01.value.text.replaceAll("\n", "");
-        setState(() {
-          controllerKeyboard = controllerField02;
-          typeLayout = TypeLayout.alphaEmail;
-        });
-      }
-    });
-    controllerField02.addListener(() {
-      if (controllerField02.value.text.endsWith("\n")) {
-        controllerField02.text =
-            controllerField02.value.text.replaceAll("\n", "");
-        setState(() {
-          controllerKeyboard = controllerField03;
-          typeLayout = TypeLayout.numeric;
-        });
-      }
-    });
     controllerField03.addListener(() {
       if (controllerField03.value.text.endsWith("\n")) {
         controllerField03.text =
@@ -156,5 +177,24 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
     });
+  }
+}
+
+enum TypeLayout { numeric }
+
+extension TypeLayoutExtension on TypeLayout {
+  List<List> get keyboard {
+    switch (this) {
+      case TypeLayout.numeric:
+        return [
+          ["1", "2", "3"],
+          ["4", "5", "6"],
+          ["7", "8", "9"],
+          ["BACKSPACE", "0", "."],
+        ];
+
+      default:
+        return [];
+    }
   }
 }
